@@ -12,7 +12,8 @@ class Album extends Component {
     this.state = {
       album: album,
       currentSong: album.songs[0],
-      isPlaying: false
+      isPlaying: false,
+      hoveredSong: null
     };
 
     this.audioElement = document.createElement("audio"); //doesn't need to be attached to the DOM, but need to access in class methods 'this'
@@ -46,6 +47,26 @@ class Album extends Component {
     }
   }
 
+  handleSongMouseEnter(song) {
+    this.setState({ hoveredSong: song });
+  }
+
+  handleSongMouseLeave() {
+    this.setState({ hoveredSong: null });
+  }
+
+  setAudioControl(song, songNumber) {
+    if (this.state.isPlaying && song === this.state.currentSong) {
+      return <span className="ion-pause" />;
+    }
+
+    if (this.state.hoveredSong === song) {
+      return <span className="ion-play" />;
+    }
+
+    return songNumber;
+  }
+
   render() {
     return (
       <section className="album">
@@ -71,8 +92,13 @@ class Album extends Component {
           <tbody>
             {this.state.album.songs.map((song, index) => {
               return (
-                <tr key={index + 1} onClick={() => this.handleSongClick(song)}>
-                  <td>{index + 1} xx</td>
+                <tr
+                  key={index + 1}
+                  onClick={() => this.handleSongClick(song)}
+                  onMouseEnter={() => this.handleSongMouseEnter(song)}
+                  onMouseLeave={() => this.handleSongMouseLeave()}
+                >
+                  <td>{this.setAudioControl(song, index + 1)}</td>
                   <td>{song.title}</td>
                   <td>{song.duration}</td>
                 </tr>
