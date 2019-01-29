@@ -1,12 +1,13 @@
 import React, { Component } from "react";
 import albumData from "./../data/albums";
+import PlayerBar from "./PlayerBar";
 
 class Album extends Component {
   constructor(props) {
     super(props);
 
     const album = albumData.find(album => {
-      return album.slug === this.props.match.params.slug; //
+      return album.slug === this.props.match.params.slug;
     });
 
     this.state = {
@@ -55,7 +56,7 @@ class Album extends Component {
     this.setState({ hoveredSong: null });
   }
 
-  setAudioControl(song, songNumber) {
+  setAudioControl(song) {
     if (this.state.isPlaying && song === this.state.currentSong) {
       return <span className="ion-pause" />;
     }
@@ -63,8 +64,18 @@ class Album extends Component {
     if (this.state.hoveredSong === song) {
       return <span className="ion-play" />;
     }
+  }
 
-    return songNumber;
+  // player bar to switch to the previous song when the user clicks on the "previous" button
+  // replays the first track if there is no previous track
+  handlePrevClick() {
+    const currentIndex = this.state.album.songs.findIndex(
+      song => this.state.currentSong === song
+    );
+    const newIndex = Math.max(0, currentIndex - 1);
+    const newSong = this.state.album.songs[newIndex];
+    this.setSong(newSong);
+    this.play();
   }
 
   render() {
@@ -82,7 +93,6 @@ class Album extends Component {
             <div id="release-info">{this.state.album.releaseInfo}</div>
           </div>
         </section>
-
         <table id="song-list">
           <colgroup>
             <col id="song-number-column" />
@@ -98,7 +108,7 @@ class Album extends Component {
                   onMouseEnter={() => this.handleSongMouseEnter(song)}
                   onMouseLeave={() => this.handleSongMouseLeave()}
                 >
-                  <td>{this.setAudioControl(song, index + 1)}</td>
+                  <td>{this.setAudioControl(song) || index + 1}</td>
                   <td>{song.title}</td>
                   <td>{song.duration}</td>
                 </tr>
@@ -106,6 +116,13 @@ class Album extends Component {
             })}
           </tbody>
         </table>
+
+        <PlayerBar
+          isPlaying={this.state.isPlaying}
+          currentSong={this.state.currentSong}
+          handleSongClick={() => this.handleSongClick(this.state.currentSong)}
+          handlePrevClick={() => this.handlePrevClick()}
+        />
       </section>
     );
   }
