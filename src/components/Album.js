@@ -14,11 +14,60 @@ class Album extends Component {
       album: album,
       currentSong: album.songs[0],
       isPlaying: false,
-      hoveredSong: null
+      hoveredSong: null,
+      currentTime: 0,
+      duration: album.songs[0].duration
     };
 
     this.audioElement = document.createElement("audio"); //doesn't need to be attached to the DOM, but need to access in class methods 'this'
     this.audioElement.src = album.songs[0].audioSrc; //start on first song
+  }
+
+  componentDidMount() {
+    this.eventListeners = {
+      timeupdate: e => {
+        this.setState({ currentTime: this.audioElement.currentTime });
+      },
+      durationchange: e => {
+        this.setState({ duration: this.audioElement.duration });
+      },
+      volumechange: e => {
+        this.setState({ currentVolume: this.audioElement.volume });
+      }
+    };
+
+    this.audioElement.addEventListener(
+      "timeupdate",
+      this.eventListeners.timeupdate
+    );
+
+    this.audioElement.addEventListener(
+      "durationchange",
+      this.eventListeners.durationchange
+    );
+
+    this.audioElement.addEventListener(
+      "volumechange",
+      this.eventListeners.volumechange
+    );
+  }
+
+  componentWillUnmount() {
+    this.audioElement.src = null;
+    this.audioElement.removeEventListener(
+      "timeupdate",
+      this.eventListeners.timeupdate
+    );
+    this.audioElement.removeEventListener(
+      "durationchange",
+      this.eventListeners.durationchange
+    );
+  }
+
+  handleTimeChange(e) {
+    const newTime = this.audioElement.duration * e.target.value;
+    this.audioElement.currentTime = newTime;
+    this.setState({ currentTime: newTime });
   }
 
   play() {
@@ -82,7 +131,8 @@ class Album extends Component {
     const currentIndex = this.state.album.songs.findIndex(
       song => this.state.currentSong === song
     );
-    const newIndex = currentIndex + 1 < this.state.album.songs.length ? currentIndex + 1 : 0;
+    const newIndex =
+      currentIndex + 1 < this.state.album.songs.length ? currentIndex + 1 : 0;
     const newSong = this.state.album.songs[newIndex];
     this.setSong(newSong);
     this.play();
@@ -130,9 +180,12 @@ class Album extends Component {
         <PlayerBar
           isPlaying={this.state.isPlaying}
           currentSong={this.state.currentSong}
+          currentTime={this.state.currentTime}
+          duration={this.state.duration}
           handleSongClick={() => this.handleSongClick(this.state.currentSong)}
           handlePrevClick={() => this.handlePrevClick()}
           handleNextClick={() => this.handleNextClick()}
+          handleTimeChange={e => this.handleTimeChange(e)}
         />
       </section>
     );
